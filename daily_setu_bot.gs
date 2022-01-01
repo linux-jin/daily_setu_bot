@@ -38,7 +38,8 @@ function sendPerFiveMinutes()
 
 function sendPerHour()
 {
-  initSetu("oneHour");
+  // initSetu("oneHour");
+  initSetu("fiveMinutes");
 }
 
 function initSetu (rate)
