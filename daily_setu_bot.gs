@@ -61,8 +61,10 @@ function initSetuReal (rate)
 {
     let ChatIds = getChatIds(rate);
     let setu = JSON.parse(getSetuReal().getContentText());
+    let word = getWord().getContentText()
     if (setu["code"] !== 200) return
-    setu = setu["url"]
+    setu.url = setu["url"] || ''
+    setu.word = word || ''
     for (chatId in ChatIds)
     {
       sendSetuReal(ChatIds[chatId], setu, ChatIds[chatId]["notification"]);
@@ -117,10 +119,20 @@ function sendSetuReal (chatId, setu, disable_notification)
 {    
     let payload = {
         "chat_id": chatId,
-        "photo": setu,
-        "caption": '随机美图',
+        "photo": setu.url,
+        "caption": setCaptionReal(setu.word),
         "parse_mode": "HTML",
-        "disable_notification": disable_notification
+        "disable_notification": disable_notification,
+        "reply_markup":
+        {
+            "inline_keyboard": [
+                [
+                {
+                    "text": "浏览器打开" ,
+                    "url": setu.url
+                }]
+            ]
+        }
     }
     let req = {
         "method": "post",
@@ -166,6 +178,13 @@ function setCaption (setu)
     return caption;
 }
 
+function setCaptionReal (word)
+{
+    let caption = "<strong>" + '随机美女图' + "</strong>\n";
+    caption +=  word
+    return caption;
+}
+
 function getSetu ()
 {
     let payload = {
@@ -191,6 +210,11 @@ function getSetuReal()
   // mode=9 | 兔玩映画5000+图 
   // mode=1,3,5 | 多选 |
     return UrlFetchApp.fetch("https://3650000.xyz/api/?type=json&mode=66,7,9");
+}
+
+function getWord()
+{
+    return UrlFetchApp.fetch("http://api.guaqb.cn/v1/onesaid/");
 }
 
 function sendMessage (chat_id, text)
