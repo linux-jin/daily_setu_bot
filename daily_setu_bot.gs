@@ -1,7 +1,6 @@
-const baseUrl = "Firebase数据库地址";
-const baseSecret = "Firebase数据库秘钥";
-const apiUrl = "TelegramBotAPIUrl";
-const setuApi = "LoliconAPIKey";
+const baseUrl = "";
+const baseSecret = "";
+const apiUrl = "";
 let base = FirebaseApp.getDatabaseByUrl(baseUrl, baseSecret);
 
 function setData (key, value)
@@ -34,7 +33,7 @@ function getData (target)
 
 function sendPerFiveMinutes()
 {
-  initSetu("fiveMinutes");
+  initSetuReal("fiveMinutes");
 }
 
 function sendPerHour()
@@ -45,8 +44,8 @@ function sendPerHour()
 function initSetu (rate)
 {
     let ChatIds = getChatIds(rate);
-    let setu = JSON.parse(getSetu(setuApi).getContentText());
-    if (setu["code"] != 0)
+    let setu = JSON.parse(getSetu().getContentText());
+    if (setu["error"] != '')
     {
         return;
     }
@@ -57,12 +56,24 @@ function initSetu (rate)
     }
 }
 
+function initSetuReal (rate)
+{
+    let ChatIds = getChatIds(rate);
+    let setu = JSON.parse(getSetuReal().getContentText());
+    if (setu["code"] !== 200) return
+    setu = setu["url"]
+    for (chatId in ChatIds)
+    {
+      sendSetuReal(ChatIds[chatId], setu, ChatIds[chatId]["notification"]);
+    }
+}
+
 function sendSetu (chatId, setu, disable_notification)
 {    
     let caption = setCaption(setu);
     let payload = {
         "chat_id": chatId,
-        "photo": setu["url"],
+        "photo": setu["urls"]["original"],
         "caption": caption,
         "parse_mode": "HTML",
         "disable_notification": disable_notification,
@@ -80,6 +91,35 @@ function sendSetu (chatId, setu, disable_notification)
                 }]
             ]
         }
+    }
+    let req = {
+        "method": "post",
+        "contentType": "application/json",
+        "payload": JSON.stringify(payload)
+    }
+    try
+    {
+        UrlFetchApp.fetch(apiUrl + "sendPhoto", req);
+    }
+    catch(ex)
+    {
+        let patt = new RegExp("\{.*\}");
+        let ret = JSON.parse(patt.exec(ex["message"])[0]);
+        if(ret["ok"] === false && ret["error_code"] === 403)
+        {
+            setData("chatIds/" + chatId + "/rate", "False");
+        }
+    }
+}
+
+function sendSetuReal (chatId, setu, disable_notification)
+{    
+    let payload = {
+        "chat_id": chatId,
+        "photo": setu,
+        "caption": '随机美图',
+        "parse_mode": "HTML",
+        "disable_notification": disable_notification
     }
     let req = {
         "method": "post",
@@ -125,17 +165,31 @@ function setCaption (setu)
     return caption;
 }
 
-function getSetu (api_key)
+function getSetu ()
 {
     let payload = {
-        "apikey": api_key,
-        "r18": 2
+        "r18": 2,
+        "num": 1
     }
     let data = {
         "method": "get",
         "payload": payload
     }
-    return UrlFetchApp.fetch("https://api.lolicon.app/setu/", data);
+    return UrlFetchApp.fetch("https://api.lolicon.app/setu/v2", data);
+}
+
+function getSetuReal()
+{
+  // mode=1 | 微博美女图，公共图床速度快~(24000+图) 
+  // mode=2 | IG图包(55000+图)，收集Instagram美女图
+  // mode=3 | cos美女图(10596张图)
+  // mode=66 | 随机美女图，10W+(部分露点)
+  // mode=5 | Mtcos美女图(14000+张图)
+  // mode=7 | 美腿
+  // mode=8 | 40000张按Coser分类图片
+  // mode=9 | 兔玩映画5000+图 
+  // mode=1,3,5 | 多选 |
+    return UrlFetchApp.fetch("https://3650000.xyz/api/?type=json&mode=66,7,9");
 }
 
 function sendMessage (chat_id, text)
@@ -199,6 +253,14 @@ function doPost (e)
     {
         switch (data["message"]["text"])
         {
+            case "/start":
+            case "/start@daily_setu_bot":
+                if (isInPrivate(data))
+                {
+                    sendMessage(data["message"]["chat"]["id"], "欢迎使用1！");
+                  sendPerFiveMinutes()
+                }
+                break;
             case "/onforme":
             case "/onforme@daily_setu_bot":
                 if (isInPrivate(data))
