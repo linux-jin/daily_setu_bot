@@ -130,7 +130,16 @@ function sendSetuReal (chatId, setu, disable_notification)
                 {
                     "text": "浏览器打开" ,
                     "url": setu.url
-                }]
+                },
+                {
+                    "text": "随机视频" ,
+                    "url": 'http://random.arrontg.cf/v/ks/meitui'
+                },
+                {
+                    "text": "随机视频" ,
+                    "url": 'http://random.arrontg.cf/v/ks/dance'
+                }
+                ]
             ]
         }
     }
