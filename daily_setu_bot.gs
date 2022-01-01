@@ -132,6 +132,10 @@ function sendSetuReal (chatId, setu, disable_notification)
                     "url": setu.url
                 },
                 {
+                    "text": "买家秀" ,
+                    "url": 'https://api.vvhan.com/api/tao'
+                },
+                {
                     "text": "随机视频" ,
                     "url": 'http://random.arrontg.cf/v/ks/meitui'
                 },
@@ -139,6 +143,7 @@ function sendSetuReal (chatId, setu, disable_notification)
                     "text": "随机视频" ,
                     "url": 'http://random.arrontg.cf/v/ks/dance'
                 }
+                
                 ]
             ]
         }
